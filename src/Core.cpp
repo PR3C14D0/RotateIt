@@ -46,8 +46,33 @@ Core::Core(HWND& hwnd) {
 	viewport.TopLeftY = 0;
 	viewport.Width = this->width;
 	viewport.Height = this->height;
-	
-	this->con->OMSetRenderTargets(1, this->backBuffer.GetAddressOf(), nullptr);
+	viewport.MinDepth = 0.f;
+	viewport.MaxDepth = 1.f;
+
+	ID3D11Texture2D* depthTex;
+
+	D3D11_TEXTURE2D_DESC depthTexDesc = { };
+	ZeroMemory(&depthTexDesc, sizeof(D3D11_TEXTURE2D_DESC));
+
+	depthTexDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	depthTexDesc.ArraySize = 1;
+	depthTexDesc.MipLevels = 1;
+	depthTexDesc.SampleDesc.Count = 4;
+	depthTexDesc.Height = this->height;
+	depthTexDesc.Width = this->width;
+	depthTexDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+
+	this->dev->CreateTexture2D(&depthTexDesc, nullptr, &depthTex);
+
+	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = { };
+	ZeroMemory(&dsvDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
+
+	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
+	dsvDesc.Format = depthTexDesc.Format;
+
+	this->dev->CreateDepthStencilView(depthTex, &dsvDesc, this->depthBuffer.GetAddressOf());
+
+	this->con->OMSetRenderTargets(1, this->backBuffer.GetAddressOf(), this->depthBuffer.Get());
 	this->con->RSSetViewports(1, &viewport);
 
 	this->InitBuffers();
@@ -149,6 +174,7 @@ void Core::LoadModel(string fileName) {
 
 void Core::MainLoop() {
 	this->con->ClearRenderTargetView(this->backBuffer.Get(), RGBA{ 0.f, 0.f, 0.f, 1.f });
+	this->con->ClearDepthStencilView(this->depthBuffer.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.f, 0.f);
 
 	UINT offset = 0;
 	UINT stride = sizeof(vertex);

@@ -41,6 +41,8 @@ private:
 	ComPtr<ID3D11InputLayout> iLayout;
 	ComPtr<ID3D11Buffer> cbuffer;
 
+	ComPtr<ID3D11DepthStencilView> depthBuffer;
+
 	ConstantBuffer cbuff;
 
 	float rotation;
