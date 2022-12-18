@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 
-add_executable(RotateIt "main.cpp")
+add_executable(RotateIt "main.cpp" "Core.h" "Core.cpp")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET RotateIt PROPERTY CXX_STANDARD 20)

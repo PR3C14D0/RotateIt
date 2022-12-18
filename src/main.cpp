@@ -1,11 +1,20 @@
 #include <iostream>
 #include <Windows.h>
+#include "Core.h";
+
+using namespace std;
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 bool quit = false;
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd) {
 	const wchar_t* CLASS_NAME = L"RotateIt";
+
+#ifndef NDEBUG
+	AllocConsole();
+	FILE* f;
+	freopen_s(&f, "CONOUT$", "w", stdout);
+#endif
 
 	WNDCLASS wc = { };
 	wc.hInstance = hInstance;
@@ -30,12 +39,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	ShowWindow(hwnd, nShowCmd);
 
 
+	Core* core = new Core(hwnd);
+
 	MSG msg = { };
 	while (!quit) {
 		if (PeekMessage(&msg, NULL, NULL, NULL, PM_REMOVE)) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
+		core->MainLoop();
 	}
 	
 	return 0;
