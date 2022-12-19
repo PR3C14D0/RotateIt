@@ -98,7 +98,7 @@ void Core::InitBuffers() {
 
 	this->cbuff.Model = XMMatrixTranspose(XMMatrixIdentity());
 	this->cbuff.Projection = XMMatrixTranspose(XMMatrixPerspectiveFovLH(XMConvertToRadians(90.f), (float)this->width / (float)this->height, .1f, 300.f));
-	this->cbuff.View = XMMatrixTranspose(XMMatrixLookToLH(XMVectorSet(0.f, 0.f, -2.f, 0.f), XMVectorSet(0.f, 0.f, 1.f, 0.f), XMVectorSet(0.f, 1.f, 0.f, 0.f)));
+	this->cbuff.View = XMMatrixTranspose(XMMatrixLookToLH(XMVectorSet(0.f, 0.f, -8.f, 0.f), XMVectorSet(0.f, 0.f, 1.f, 0.f), XMVectorSet(0.f, 1.f, 0.f, 0.f)));
 
 	D3D11_BUFFER_DESC cbufferDesc = { };
 	ZeroMemory(&cbufferDesc, sizeof(D3D11_BUFFER_DESC));
@@ -164,9 +164,29 @@ void Core::LoadModel(string fileName) {
 		}
 
 		aiString texPath;
-		scene->mMaterials[0]->GetTexture(aiTextureType_DIFFUSE, 0, &texPath);
+		aiMaterial* mat = scene->mMaterials[mesh->mMaterialIndex];
+		if (mat->GetTextureCount(aiTextureType_DIFFUSE) > 0 && mat->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
+			HRESULT hr = D3DX11CreateShaderResourceViewFromFileA(this->dev.Get(), texPath.C_Str(), nullptr, nullptr, this->modelTex.GetAddressOf(), nullptr);
+			if (FAILED(hr)) {
+				MessageBoxA(this->hwnd, "An error occurred while creating shader resource view.", "Error", MB_OK | MB_ICONERROR);
+				return;
+			}
 
-		
+			D3D11_SAMPLER_DESC samplerDesc = { };
+			ZeroMemory(&samplerDesc, sizeof(D3D11_SAMPLER_DESC));
+
+			samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+			samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+			samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+			samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+			samplerDesc.MinLOD = 0;
+			samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+			samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+
+			this->dev->CreateSamplerState(&samplerDesc, this->sampler.GetAddressOf());
+			this->con->PSSetShaderResources(0, 1, this->modelTex.GetAddressOf());
+			this->con->PSSetSamplers(0, 1, this->sampler.GetAddressOf());
+		}
 	}
 
 	return;

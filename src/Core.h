@@ -43,6 +43,9 @@ private:
 
 	ComPtr<ID3D11DepthStencilView> depthBuffer;
 
+	ComPtr<ID3D11ShaderResourceView> modelTex;
+	ComPtr<ID3D11SamplerState> sampler;
+
 	ConstantBuffer cbuff;
 
 	float rotation;
