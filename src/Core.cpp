@@ -109,8 +109,8 @@ void Core::InitBuffers() {
 	this->cbuff.Projection = XMMatrixTranspose(XMMatrixPerspectiveFovLH(XMConvertToRadians(90.f), (float)this->width / (float)this->height, .1f, 300.f));
 	this->cbuff.View = XMMatrixTranspose(XMMatrixLookToLH(XMVectorSet(0.f, 0.f, -2.f, 0.f), XMVectorSet(0.f, 0.f, 1.f, 0.f), XMVectorSet(0.f, 1.f, 0.f, 0.f)));
 
-	this->cbuff.View *= XMMatrixTranspose(XMMatrixRotationX(XMConvertToRadians(45.f)));
-	this->cbuff.View *= XMMatrixTranspose(XMMatrixTranslation(0.f, 0.f, 0.f));
+	/*this->cbuff.View *= XMMatrixTranspose(XMMatrixRotationX(XMConvertToRadians(45.f)));
+	this->cbuff.View *= XMMatrixTranspose(XMMatrixTranslation(0.f, 0.f, 0.f));*/
 
 	D3D11_BUFFER_DESC cbufferDesc = { };
 	ZeroMemory(&cbufferDesc, sizeof(D3D11_BUFFER_DESC));
