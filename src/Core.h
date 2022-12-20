@@ -10,6 +10,9 @@
 #include <Assimp/scene.h>
 #include <Assimp/Importer.hpp>
 #include <Assimp/postprocess.h>
+#include <ImGUI/imgui.h>
+#include <ImGUI/backends/imgui_impl_dx11.h>
+#include <ImGUI/backends/imgui_impl_win32.h>
 
 using namespace std;
 using namespace Microsoft::WRL;
@@ -59,7 +62,11 @@ private:
 	void InitBuffers();
 	void LoadModel(string fileName);
 	void UpdateCBuffers();
+
+	void MenuLoop();
+
 public:
 	Core(HWND& hwnd);
 	void MainLoop();
+	void Cleanup();
 };

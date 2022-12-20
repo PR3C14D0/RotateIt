@@ -75,6 +75,15 @@ Core::Core(HWND& hwnd) {
 	this->con->OMSetRenderTargets(1, this->backBuffer.GetAddressOf(), this->depthBuffer.Get());
 	this->con->RSSetViewports(1, &viewport);
 
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	
+	ImGui::StyleColorsDark();
+
+	ImGui_ImplWin32_Init(this->hwnd);
+	ImGui_ImplDX11_Init(this->dev.Get(), this->con.Get());
+
 	this->InitBuffers();
 }
 
@@ -98,7 +107,10 @@ void Core::InitBuffers() {
 
 	this->cbuff.Model = XMMatrixTranspose(XMMatrixIdentity());
 	this->cbuff.Projection = XMMatrixTranspose(XMMatrixPerspectiveFovLH(XMConvertToRadians(90.f), (float)this->width / (float)this->height, .1f, 300.f));
-	this->cbuff.View = XMMatrixTranspose(XMMatrixLookToLH(XMVectorSet(0.f, 0.f, -8.f, 0.f), XMVectorSet(0.f, 0.f, 1.f, 0.f), XMVectorSet(0.f, 1.f, 0.f, 0.f)));
+	this->cbuff.View = XMMatrixTranspose(XMMatrixLookToLH(XMVectorSet(0.f, 0.f, -2.f, 0.f), XMVectorSet(0.f, 0.f, 1.f, 0.f), XMVectorSet(0.f, 1.f, 0.f, 0.f)));
+
+	this->cbuff.View *= XMMatrixTranspose(XMMatrixRotationX(XMConvertToRadians(45.f)));
+	this->cbuff.View *= XMMatrixTranspose(XMMatrixTranslation(0.f, 0.f, 0.f));
 
 	D3D11_BUFFER_DESC cbufferDesc = { };
 	ZeroMemory(&cbufferDesc, sizeof(D3D11_BUFFER_DESC));
@@ -193,6 +205,8 @@ void Core::LoadModel(string fileName) {
 }
 
 void Core::MainLoop() {
+	this->MenuLoop();
+	ImGui::Render();
 	this->con->ClearRenderTargetView(this->backBuffer.Get(), RGBA{ 0.f, 0.f, 0.f, 1.f });
 	this->con->ClearDepthStencilView(this->depthBuffer.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.f, 0.f);
 
@@ -206,5 +220,48 @@ void Core::MainLoop() {
 
 	this->con->Draw(this->vert.size(), 0);
 
+	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
 	this->sc->Present(1, 0);
+}
+
+void Core::Cleanup() {
+	if (MessageBoxA(this->hwnd, "Are you sure you want to exit?", "Confirmation", MB_OKCANCEL) == IDOK) {
+		this->dev->Release();
+		this->con->Release();
+		this->backBuffer->Release();
+		this->depthBuffer->Release();
+		this->cbuffer->Release();
+		this->modelTex->Release();
+		this->sampler->Release();
+		this->iLayout->Release();
+		this->posBuff->Release();
+		this->sc->Release();
+
+		DestroyWindow(hwnd);
+	}
+}
+
+void Core::MenuLoop() {
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+
+	ImGui::BeginMainMenuBar();
+	ImGui::MenuItem("Open");
+	/* Cleanup */
+	if (ImGui::MenuItem("Exit"))
+		this->Cleanup();
+	ImGui::EndMainMenuBar();
+
+	ImGui::SetNextWindowSize(ImVec2{ 200.f, 600.f, }, NULL);
+	ImGui::Begin("Properties", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+	ImGui::Text("Rotation speed");
+	ImGui::InputFloat("##btnSpeed", &this->rotSpeed, .5f, 1.f, "%.1f", NULL);
+	ImGui::End();
+
+	if (this->rotSpeed > 100.f)
+		this->rotSpeed = 100.f;
+	if (this->rotSpeed < -100.f)
+		this->rotSpeed = -100.f;
 }

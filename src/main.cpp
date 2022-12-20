@@ -49,11 +49,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 		core->MainLoop();
 	}
+
+	core->Cleanup();
 	
 	return 0;
 }
 
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+	if (ImGui_ImplWin32_WndProcHandler(hwnd, uMsg, wParam, lParam))
+		return 0;
+
 	switch (uMsg) {
 	case WM_CLOSE:
 		if (MessageBox(hwnd, L"Are you sure you want to close?", L"Confirmation", MB_OKCANCEL) == IDOK)
